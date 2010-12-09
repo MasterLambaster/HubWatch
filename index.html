@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>HubWatch - Find watched repositories easily</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  <style type="text/css" media="screen">
+    body {
+      font-family: Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;
+      font-size: 90%;
+      background-color: #FAFAFA;
+      padding:0;
+      margin: 0;
+    }
+    .repo {
+      border: 1px solid #D8D8D8;
+      margin: 3px;
+    }
+    
+    .name {
+      background-color: #EAEAEA;
+      padding:5px;
+      border-bottom: 1px solid #D8D8D8;
+    }
+    .name a {
+      color: #4183C4;
+    }
+    .description {
+      padding:5px;
+    }
+    .watchers {
+      background-image:url('http://github.com/images/modules/pagehead/repostat_watchers-watching.png');
+      background-position: 5px -2px;
+      background-repeat: no-repeat;
+      color: #666666;
+      height: 21px;
+      display:inline-block;
+      line-height: 21px;
+      font-size: 11px;
+      padding:0 5px 0 23px;
+    }
+    .forks {
+      background-image:url('http://github.com/images/modules/pagehead/repostat_forks-forked.png');
+      background-position: 5px -2px;
+      background-repeat: no-repeat;
+      color: #666666;
+      height: 21px;
+      display:inline-block;
+      line-height: 21px;
+      font-size: 11px;
+      padding:0 5px 0 23px;
+    }
+    .info {
+      float: right;
+    }
+    #header {
+      background-color: #EAF2F5;
+      border: 1px solid #BEDCE7;
+      padding: 5px;
+      font: 13.34px helvetica,arial,freesans,clean,sans-serif;
+      position:fixed;
+      top: 0;
+      width:100%;
+    }
+    #header b {
+      margin-right: 8px;
+      font-size: 15px;
+    }
+    #header img {
+      vertical-align: middle;
+    }
+    #search{
+      float:right;
+      margin-right:20px;
+    }
+    #search_box {
+      background: url("http://github.com/images/modules/header/search_field.gif") no-repeat scroll 0 -22px transparent;
+      border: medium none;
+      font-size: 12px;
+      height: 16px;
+      padding: 4px 10px 2px 21px;
+      width: 149px;
+      outline-style:none;
+    }
+    .search_hl {
+      background-color:#EBC70B;
+      border:1px solid #EED40A;
+      -webkit-border-radius: 4px;
+      -moz-border-radius: 4px;
+      border-radius: 4px;
+      -webkit-box-shadow: 2px 4px 4px #706c70;
+      -moz-box-shadow: 2px 4px 4px #706c70;
+      box-shadow: 2px 4px 4px #706c70;
+    }
+    #pane {
+      margin: 0 auto;
+      overflow: auto;
+      padding-top:33px;
+    }
+  </style>
+  <script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-11771766-4']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+</head>
+<body>
+  <div id="header">
+    <b>HubWatch</b>
+    User: http://github.com/<input type="text" name="user" value="" id="user">
+    <input type="button" name="go" value="Go" id="go">
+    <img src="loader.gif" style="display:none;" id="loader">
+    <div id="search">
+      <input type="text" name="search_box" value="" id="search_box" autocomplete="off">
+    </div>
+  </div>
+  <div id="pane">
+  </div>
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function(){
+      $('#user').keypress(function(event) {
+        if (event.keyCode == '13') {
+           $('#go').click();
+         }
+      });
+      $('#go').click(function(){
+        window.location.hash = '#' + $('#user').val();
+        $('#loader').show();
+        $('#pane').html('');
+        var user = window.location.hash.substr(1);
+        $.getJSON('/api/v2/json/repos/watched/'+user, function(data){
+          if(data && data.repositories) {
+            $.each(data.repositories, function(index, data){
+              var el = $('<div>').append(
+                  $('<div>').addClass('name').append(
+                      $('<a>').attr('href',this.url).html(this.name),
+                      $('<span>').html(' by '),
+                      $('<a>').attr('href', 'http://github.com/'+this.owner).html(this.owner),
+                      $('<div>').addClass('info').append(
+                        $('<span>').addClass('watchers').html(this.watchers),
+                        $('<span>').addClass('forks').html(this.forks)
+                      )
+                    ),
+                  $('<div>').addClass('description').html(this.description)
+                ).addClass('repo').attr('id', 'repo_'+index);
+              $('#pane').append(
+                el
+              );
+            })
+          }
+          $('#loader').hide();
+        });
+      });
+
+      $('#search_box').keyup(function(){
+        if($(this).val() == ''){
+          $('#pane .repo').show();
+        } else {
+          var search = new RegExp($(this).val(), 'ig');
+          $.each($('#pane .description'), function(){
+            if($(this).html().match(search) && $(this).html() != '') {
+              $(this).parent('.repo').show();
+            } else {
+              $(this).parent('.repo').hide();
+            }
+          });
+        }
+      });
+      if(window.location.hash != ""){
+        var user = window.location.hash.substr(1);
+        $('#user').val(user);
+        $('#go').click();
+      }
+    });
+  </script>
+</body>
+</html>
