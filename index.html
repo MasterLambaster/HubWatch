@@ -151,7 +151,7 @@
                         $('<span>').addClass('forks').html(this.forks)
                       )
                     ),
-                  $('<div>').addClass('description').html(this.description)
+                  $('<div>').addClass('description').text(this.description)
                 ).addClass('repo').attr('id', 'repo_'+index);
               $('#pane').append(
                 el
