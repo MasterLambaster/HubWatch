@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>HubWatch - Find watched repositories easily</title>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://ajax.cdnjs.com/ajax/libs/underscore.js/1.1.5/underscore-min.js" type="text/javascript" charset="utf-8"></script>
   <style type="text/css" media="screen">
     body {
       font-family: Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;
@@ -18,7 +19,7 @@
       border: 1px solid #D8D8D8;
       margin: 3px;
     }
-    
+
     .name {
       background-color: #EAEAEA;
       padding:5px;
@@ -128,6 +129,7 @@
   </div>
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
+      var tpl = _.template($('#repo-row').html());
       $('#user').keypress(function(event) {
         if (event.keyCode == '13') {
            $('#go').click();
@@ -141,20 +143,8 @@
         $.getJSON('/api/v2/json/repos/watched/'+user, function(data){
           if(data && data.repositories) {
             $.each(data.repositories, function(index, data){
-              var el = $('<div>').append(
-                  $('<div>').addClass('name').append(
-                      $('<a>').attr('href',this.url).html(this.name),
-                      $('<span>').html(' by '),
-                      $('<a>').attr('href', 'http://github.com/'+this.owner).html(this.owner),
-                      $('<div>').addClass('info').append(
-                        $('<span>').addClass('watchers').html(this.watchers),
-                        $('<span>').addClass('forks').html(this.forks)
-                      )
-                    ),
-                  $('<div>').addClass('description').text(this.description)
-                ).addClass('repo').attr('id', 'repo_'+index);
               $('#pane').append(
-                el
+                tpl(_.extend(this, {'index': index}))
               );
             })
           }
@@ -182,6 +172,22 @@
         $('#go').click();
       }
     });
+  </script>
+  <script  type="text/template" id="repo-row">
+    <div id="repo-<%= index %>" class="repo">
+      <div class="name">
+        <a href="https://github.com/<%= url %>"><%= name %></a>
+        <span> by </span>
+        <a href="https://github.com/<%= owner %>"><%= owner %></a>
+        <div class="info">
+          <span class="watchers"><%= watchers %></span>
+          <span class="forks"><%= forks %></span>
+        </div>
+      </div>
+      <div class="description">
+        <%= description %>
+      </div>
+    </div>
   </script>
 </body>
 </html>
