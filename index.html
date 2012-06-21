@@ -140,9 +140,9 @@
         $('#loader').show();
         $('#pane').html('');
         var user = window.location.hash.substr(1);
-        $.getJSON('/api/v2/json/repos/watched/'+user, function(data){
-          if(data && data.repositories) {
-            $.each(data.repositories, function(index, data){
+        $.getJSON('/users/'+user+'/watched', function(data){
+          if(data) {
+            $.each(data, function(index, data){
               $('#pane').append(
                 tpl(_.extend(this, {'index': index}))
               );
@@ -176,9 +176,9 @@
   <script  type="text/template" id="repo-row">
     <div id="repo-<%= index %>" class="repo">
       <div class="name">
-        <a href="https://github.com/<%= url %>"><%= name %></a>
+        <a href="<%= html_url %>"><%= name %></a>
         <span> by </span>
-        <a href="https://github.com/<%= owner %>"><%= owner %></a>
+        <a href="https://github.com/<%= owner.login %>"><%= owner.login %></a>
         <div class="info">
           <span class="watchers"><%= watchers %></span>
           <span class="forks"><%= forks %></span>
